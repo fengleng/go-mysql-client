@@ -54,7 +54,7 @@ func Open(addr string, user string, password string, dbName string, opts ...DbOp
 	db.ResourcePool = resource_polll.NewResourcePool(db.newConn, db.opt.capacity, db.opt.maxCapacity, db.opt.idleTimeout)
 	err := db.Ping()
 	if err != nil {
-		xlog.Error("%v", err)
+		log.Error("%v", err)
 		return nil, err
 	}
 	return db, nil
@@ -65,7 +65,7 @@ func (db *DB) GetConn() (*Conn, error) {
 	defer cancel()
 	r, err := db.ResourcePool.Get(getCtx)
 	if err != nil {
-		xlog.Error("%v", err)
+		log.Error("%v", err)
 		return nil, err
 	}
 	return r.(*Conn), nil
@@ -118,12 +118,12 @@ func (db *DB) Ping() error {
 	var err error
 	conn, err := db.GetConn()
 	if err != nil {
-		xlog.Error("%v", err)
+		log.Error("%v", err)
 		return err
 	}
 	err = conn.Ping()
 	if err != nil {
-		xlog.Error("%v", err)
+		log.Error("%v", err)
 		return err
 	}
 	db.PutConn(conn)
@@ -150,7 +150,7 @@ func (db *DB) Execute(command string, args ...interface{}) (*mysql.Result, error
 	)
 	conn, err := db.GetConn()
 	if err != nil {
-		xlog.Error("err:%v", err)
+		log.Error("err:%v", err)
 		return nil, err
 	}
 	defer db.PutConn(conn)
@@ -160,7 +160,7 @@ func (db *DB) Execute(command string, args ...interface{}) (*mysql.Result, error
 		conn.Close()
 		conn, err = db.tryConn()
 		if err != nil {
-			xlog.Error("%v", err)
+			log.Error("%v", err)
 			return nil, err
 		}
 		r, err = conn.Execute(command, args...)
