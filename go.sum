@@ -1,0 +1,6 @@
+github.com/fengleng/go-common v0.0.6 h1:gRGDZ+U0QjG7g3KAMbhDVgNhdAGFGz72aEwQe/vY4K4=
+github.com/fengleng/go-common v0.0.6/go.mod h1:ar8cEtVh7VhQ01kEuUw4jWc3ljs0CqT2yOTJQz+vwrM=
+github.com/fengleng/log v0.0.0-20211028152726-fc8ea393fb7f h1:gDw/kUKamt0dV1nEaWcisUu6DUzdZJ6Iy6LTQ2N3xtA=
+github.com/fengleng/log v0.0.0-20211028152726-fc8ea393fb7f/go.mod h1:PQ6wWvN7tZdUNTJt2s5MsoQNJwqlfU1FsAA/Brvw43U=
+github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
+github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
