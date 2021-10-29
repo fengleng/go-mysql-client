@@ -46,7 +46,7 @@ func CalcPassword(scramble, password []byte) []byte {
 	return scramble
 }
 
-// seed must be in the range of ascii
+// RandomBuf seed must be in the range of ascii
 func RandomBuf(size int) ([]byte, error) {
 	buf := make([]byte, size)
 	rand.Seed(time.Now().UTC().UnixNano())
