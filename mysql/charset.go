@@ -1,22 +1,8 @@
-// Copyright 2016 The kingshard Authors. All rights reserved.
-//
-// Licensed under the Apache License, Version 2.0 (the "License"): you may
-// not use this file except in compliance with the License. You may obtain
-// a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-// WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-// License for the specific language governing permissions and limitations
-// under the License.
-
 package mysql
 
 type CollationId uint8
 
-//charset key is charset name and value is default collation id
+// CharsetIds charset key is charset name and value is default collation id
 var CharsetIds = map[string]CollationId{
 	"big5":     1,
 	"dec8":     3,
@@ -60,7 +46,7 @@ var CharsetIds = map[string]CollationId{
 	"eucjpms":  97,
 }
 
-//charset key is charset name and value is default collation name
+// Charsets charset key is charset name and value is default collation name
 var Charsets = map[string]string{
 	"big5":     "big5_chinese_ci",
 	"dec8":     "dec8_swedish_ci",

@@ -1,17 +1,3 @@
-// Copyright 2016 The kingshard Authors. All rights reserved.
-//
-// Licensed under the Apache License, Version 2.0 (the "License"): you may
-// not use this file except in compliance with the License. You may obtain
-// a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-// WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-// License for the specific language governing permissions and limitations
-// under the License.
-
 package backend
 
 import (
@@ -72,13 +58,13 @@ func (s *Stmt) write(args ...interface{}) error {
 	//NULL-bitmap, length: (num-params+7)
 	nullBitmap := make([]byte, (paramsNum+7)>>3)
 
-	var length int = int(1 + 4 + 1 + 4 + ((paramsNum + 7) >> 3) + 1 + (paramsNum << 1))
+	var length = int(1 + 4 + 1 + 4 + ((paramsNum + 7) >> 3) + 1 + (paramsNum << 1))
 
 	var newParamBoundFlag byte = 0
 
 	for i := range args {
 		if args[i] == nil {
-			nullBitmap[i/8] |= (1 << (uint(i) % 8))
+			nullBitmap[i/8] |= 1 << (uint(i) % 8)
 			paramTypes[i<<1] = mysql.MYSQL_TYPE_NULL
 			continue
 		}

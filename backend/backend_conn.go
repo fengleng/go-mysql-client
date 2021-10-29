@@ -3,13 +3,13 @@ package backend
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"net"
 	"strings"
 	"time"
 
 	"github.com/fengleng/go-mysql-client/mysql"
+	"github.com/pingcap/errors"
 )
 
 var (
@@ -45,16 +45,12 @@ func (c *Conn) Connect(addr string, user string, password string, db string) err
 	c.password = password
 	c.db = db
 
-	//use utf8
-	c.collation = mysql.DEFAULT_COLLATION_ID
-	c.charset = mysql.DEFAULT_CHARSET
-
 	return c.ReConnect()
 }
 
 func (c *Conn) ReConnect() error {
 	if c.conn != nil {
-		c.conn.Close()
+		_ = c.conn.Close()
 	}
 
 	n := "tcp"
@@ -73,35 +69,38 @@ func (c *Conn) ReConnect() error {
 	// in hopes of sending fewer packets (Nagle's algorithm).
 	// The default is true (no delay),
 	// meaning that data is sent as soon as possible after a Write.
-	//I set this option false.
-	tcpConn.SetNoDelay(false)
-	tcpConn.SetKeepAlive(true)
+	//I set this option true.
+	err = tcpConn.SetNoDelay(true)
+	if err != nil {
+		return errors.Trace(err)
+	}
+	err = tcpConn.SetKeepAlive(true)
+	if err != nil {
+		return errors.Trace(err)
+	}
 	c.conn = tcpConn
 	c.pkg = mysql.NewPacketIO(tcpConn)
 
 	if err := c.readInitialHandshake(); err != nil {
-		c.conn.Close()
-		return err
+		err := c.conn.Close()
+		return errors.Trace(err)
 	}
 
 	if err := c.writeAuthHandshake(); err != nil {
-		c.conn.Close()
-
-		return err
+		err := c.conn.Close()
+		return errors.Trace(err)
 	}
 
 	if _, err := c.readOK(); err != nil {
-		c.conn.Close()
-
-		return err
+		err := c.conn.Close()
+		return errors.Trace(err)
 	}
 
 	//we must always use autocommit
 	if !c.IsAutoCommit() {
 		if _, err := c.exec("set autocommit = 1"); err != nil {
-			c.conn.Close()
-
-			return err
+			err := c.conn.Close()
+			return errors.Trace(err)
 		}
 	}
 
@@ -110,7 +109,7 @@ func (c *Conn) ReConnect() error {
 
 func (c *Conn) Close() {
 	if c.conn != nil {
-		c.conn.Close()
+		_ = c.conn.Close()
 		c.conn = nil
 		c.salt = nil
 		c.pkgErr = nil
@@ -373,7 +372,7 @@ func (c *Conn) Execute(command string, args ...interface{}) (*mysql.Result, erro
 		} else {
 			var r *mysql.Result
 			r, err = s.Execute(args...)
-			s.Close()
+			_ = s.Close()
 			return r, err
 		}
 	}
@@ -401,13 +400,13 @@ func (c *Conn) Rollback() error {
 func (c *Conn) SetAutoCommit(n uint8) error {
 	if n == 0 {
 		if _, err := c.exec("set autocommit = 0"); err != nil {
-			c.conn.Close()
+			_ = c.conn.Close()
 
 			return err
 		}
 	} else {
 		if _, err := c.exec("set autocommit = 1"); err != nil {
-			c.conn.Close()
+			_ = c.conn.Close()
 
 			return err
 		}
@@ -476,7 +475,6 @@ func (c *Conn) FieldList(table string, wildcard string) ([]*mysql.Field, error) 
 			fs = append(fs, f)
 		}
 	}
-	return nil, fmt.Errorf("field list error")
 }
 
 func (c *Conn) exec(query string) (*mysql.Result, error) {
@@ -518,7 +516,7 @@ func (c *Conn) readResultset(data []byte, binary bool) (*mysql.Result, error) {
 }
 
 func (c *Conn) readResultColumns(result *mysql.Result) (err error) {
-	var i int = 0
+	var i = 0
 	var data []byte
 
 	for {
@@ -568,7 +566,7 @@ func (c *Conn) readResultRows(result *mysql.Result, isBinary bool) (err error) {
 		if c.isEOFPacket(data) {
 			if c.capability&mysql.CLIENT_PROTOCOL_41 > 0 {
 				//result.Warnings = binary.LittleEndian.Uint16(data[1:])
-				//todo add strict_mode, warning will be treat as error
+				// todo add strict_mode, warning will be treat as error
 				result.Status = binary.LittleEndian.Uint16(data[3:])
 				c.status = result.Status
 			}
@@ -607,7 +605,6 @@ func (c *Conn) readUntilEOF() (err error) {
 			return
 		}
 	}
-	return
 }
 
 func (c *Conn) isEOFPacket(data []byte) bool {
@@ -616,7 +613,7 @@ func (c *Conn) isEOFPacket(data []byte) bool {
 
 func (c *Conn) handleOKPacket(data []byte) (*mysql.Result, error) {
 	var n int
-	var pos int = 1
+	var pos = 1
 
 	r := new(mysql.Result)
 
@@ -646,7 +643,7 @@ func (c *Conn) handleOKPacket(data []byte) (*mysql.Result, error) {
 func (c *Conn) handleErrorPacket(data []byte) error {
 	e := new(mysql.SqlError)
 
-	var pos int = 1
+	var pos = 1
 
 	e.Code = binary.LittleEndian.Uint16(data[pos:])
 	pos += 2

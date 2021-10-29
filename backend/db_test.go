@@ -2,6 +2,7 @@ package backend
 
 import (
 	"log"
+	"sync"
 	"testing"
 )
 
@@ -11,7 +12,12 @@ func TestDB_Ping(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer db.Close()
-	db.Ping()
+	for i := 0; i < 10000; i++ {
+		err := db.Ping()
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
 }
 func TestT2(t *testing.T) {
 	var m map[string]string
@@ -21,47 +27,47 @@ func TestT2(t *testing.T) {
 }
 
 func TestDb(t *testing.T) {
-	db, err := Open("127.0.0.1:3306", "root", "root", "biz_2000772")
+	db, err := Open("127.0.0.1:3306", "root", "root", "biz")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer db.Close()
 	db.Ping()
 
-	conn, err := db.GetConn()
+	//conn, err := db.GetConn()
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
+	//res, err := conn.Execute("select *\nfrom quan_channel_live_code\n;")
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
+	res, err := db.Execute("update quan_channel_live_code set updated_at = 1623406676 where id = 2727;")
 	if err != nil {
 		t.Fatal(err)
 	}
-	res, err := conn.Execute("select *\nfrom biz_2000772.quan_ext_contact_follow\nwhere corp_id = '2000772'\nlimit 1\n;")
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(res.GetInt(0, 0))
+	t.Log(res)
 }
 
 func TestDB_Execute(t *testing.T) {
-	db, err := Open("127.0.0.1:3306", "root", "root", "biz_2000772")
+	db, err := Open("127.0.0.1:3306", "root", "root", "biz")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer db.Close()
 	db.Ping()
-
+	wg := &sync.WaitGroup{}
 	for i := 0; i < 100; i++ {
-		go exec(db)
+		wg.Add(1)
+		go exec(db, wg)
 	}
-	//for  {
-	//	//db.pushConnCount
-	//	//db.tryReuse()
-	//	t.Log(db.InUse())
-	//	//time.Sleep(1*time.Second)
-	//}
+	wg.Wait()
 
 }
 
-func exec(db *DB) {
+func exec(db *DB, wg *sync.WaitGroup) {
 	for i := 0; i < 100; i++ {
-		res, err := db.Execute("select *\nfrom biz_2000772.quan_ext_contact_follow\nwhere corp_id = '2000772'\nlimit 1\n;")
+		res, err := db.Execute("select *\nfrom quan_channel_live_code\n;")
 		if err != nil {
 			log.Println(err)
 			return
@@ -69,4 +75,5 @@ func exec(db *DB) {
 		//t.Log(db.InUse())
 		log.Println(res.GetInt(0, 0))
 	}
+	wg.Done()
 }

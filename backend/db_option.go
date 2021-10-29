@@ -1,6 +1,9 @@
 package backend
 
-import "time"
+import (
+	"github.com/fengleng/go-mysql-client/mysql"
+	"time"
+)
 
 const (
 	defaultConnTimeout = 2 * time.Second
@@ -16,6 +19,8 @@ var (
 		connTimeout: defaultConnTimeout,
 		maxCapacity: DefaultMaxCapacity,
 		capacity:    DefaultCapacity,
+		charset:     mysql.DEFAULT_CHARSET,
+		collationId: mysql.DEFAULT_COLLATION_ID,
 	}
 )
 
@@ -24,6 +29,9 @@ type Option struct {
 	capacity    int
 	connTimeout time.Duration
 	idleTimeout time.Duration
+
+	collationId mysql.CollationId
+	charset     string
 }
 
 type DbOption func(o *Option)
@@ -31,6 +39,18 @@ type DbOption func(o *Option)
 func WithCapacity(capacity int) DbOption {
 	return func(o *Option) {
 		o.capacity = capacity
+	}
+}
+
+func WithCollationId(ci mysql.CollationId) DbOption {
+	return func(o *Option) {
+		o.collationId = ci
+	}
+}
+
+func WithCharSet(charset string) DbOption {
+	return func(o *Option) {
+		o.charset = charset
 	}
 }
 

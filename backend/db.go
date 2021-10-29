@@ -2,10 +2,9 @@ package backend
 
 import (
 	"context"
-	"errors"
 	"github.com/fengleng/go-common/core/resource_polll"
 	"github.com/fengleng/go-mysql-client/mysql"
-	"github.com/fengleng/log"
+	"github.com/pingcap/errors"
 	"strings"
 	"sync"
 	"time"
@@ -54,8 +53,7 @@ func Open(addr string, user string, password string, dbName string, opts ...DbOp
 	db.ResourcePool = resource_polll.NewResourcePool(db.newConn, db.opt.capacity, db.opt.maxCapacity, db.opt.idleTimeout)
 	err := db.Ping()
 	if err != nil {
-		log.Error("%v", err)
-		return nil, err
+		return nil, errors.Trace(err)
 	}
 	return db, nil
 }
@@ -65,8 +63,7 @@ func (db *DB) GetConn() (*Conn, error) {
 	defer cancel()
 	r, err := db.ResourcePool.Get(getCtx)
 	if err != nil {
-		log.Error("%v", err)
-		return nil, err
+		return nil, errors.Trace(err)
 	}
 	return r.(*Conn), nil
 }
@@ -118,13 +115,11 @@ func (db *DB) Ping() error {
 	var err error
 	conn, err := db.GetConn()
 	if err != nil {
-		log.Error("%v", err)
-		return err
+		return errors.Trace(err)
 	}
 	err = conn.Ping()
 	if err != nil {
-		log.Error("%v", err)
-		return err
+		return errors.Trace(err)
 	}
 	db.PutConn(conn)
 	return nil
@@ -133,7 +128,8 @@ func (db *DB) Ping() error {
 //type Factory func() (Resource, error)
 func (db *DB) newConn() (resource_polll.Resource, error) {
 	co := new(Conn)
-
+	co.charset = db.opt.charset
+	co.collation = db.opt.collationId
 	if err := co.Connect(db.addr, db.user, db.password, db.db); err != nil {
 		return nil, err
 	}
@@ -150,8 +146,7 @@ func (db *DB) Execute(command string, args ...interface{}) (*mysql.Result, error
 	)
 	conn, err := db.GetConn()
 	if err != nil {
-		log.Error("err:%v", err)
-		return nil, err
+		return nil, errors.Trace(err)
 	}
 	defer db.PutConn(conn)
 	r, err = conn.Execute(command, args...)
@@ -160,8 +155,7 @@ func (db *DB) Execute(command string, args ...interface{}) (*mysql.Result, error
 		conn.Close()
 		conn, err = db.tryConn()
 		if err != nil {
-			log.Error("%v", err)
-			return nil, err
+			return nil, errors.Trace(err)
 		}
 		r, err = conn.Execute(command, args...)
 	}
@@ -205,8 +199,8 @@ func (db *DB) tryReuse(co *Conn) error {
 
 	//connection may be set names early
 	//we must use default utf8
-	if co.GetCharset() != mysql.DEFAULT_CHARSET {
-		err = co.SetCharset(mysql.DEFAULT_CHARSET, mysql.DEFAULT_COLLATION_ID)
+	if co.GetCharset() != db.opt.charset {
+		err = co.SetCharset(db.opt.charset, db.opt.collationId)
 		if err != nil {
 			return err
 		}
