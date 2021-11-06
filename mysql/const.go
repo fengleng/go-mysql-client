@@ -142,7 +142,10 @@ const (
 )
 
 const (
-	AUTH_NAME = "mysql_native_password"
+	AUTH_MYSQL_OLD_PASSWORD    = "mysql_old_password"
+	AUTH_NATIVE_PASSWORD       = "mysql_native_password"
+	AUTH_CACHING_SHA2_PASSWORD = "caching_sha2_password"
+	AUTH_SHA256_PASSWORD       = "sha256_password"
 )
 
 var (
