@@ -67,7 +67,7 @@ func (p *PacketIO) ReadPacket() ([]byte, error) {
 	}
 }
 
-//data already have header
+// WritePacket data already have header
 func (p *PacketIO) WritePacket(data []byte) error {
 	length := len(data) - 4
 
